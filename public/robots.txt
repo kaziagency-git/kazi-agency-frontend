@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://www.kaziagency.com/sitemap.xml
+# Google site verification meta is also present in head

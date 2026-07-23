@@ -1,0 +1,24 @@
+{
+  "industries": [
+    { "label": "Technology", "value": "Technology" },
+    { "label": "Finance", "value": "Finance" },
+    { "label": "Healthcare", "value": "Healthcare" },
+    { "label": "Real Estate", "value": "Real Estate" },
+    { "label": "E-commerce", "value": "E-commerce" },
+    { "label": "Education", "value": "Education" },
+    { "label": "Other", "value": "Other" }
+  ],
+  "companySizes": [
+    { "label": "1-10 employees", "value": "1-10" },
+    { "label": "11-50 employees", "value": "11-50" },
+    { "label": "51-200 employees", "value": "51-200" },
+    { "label": "201-1000 employees", "value": "201-1000" },
+    { "label": "1000+ employees", "value": "1000+" }
+  ],
+  "investmentAmounts": [
+    { "label": "Under $5,000", "value": "Under $5k" },
+    { "label": "$5,000 - $25,000", "value": "$5k-$25k" },
+    { "label": "$25,000 - $100,000", "value": "$25k-$100k" },
+    { "label": "$100,000+", "value": "$100k+" }
+  ]
+}

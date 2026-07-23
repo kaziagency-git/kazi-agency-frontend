@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kazi Agency — Dashboard & Client Portal Architecture Plan</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --brand: #7C3AED;
+      --brand-light: #EDE9FE;
+      --brand-dark: #5B21B6;
+      --accent: #06B6D4;
+      --accent-light: #ECFEFF;
+      --success: #10B981;
+      --success-light: #D1FAE5;
+      --warning: #F59E0B;
+      --warning-light: #FEF3C7;
+      --danger: #EF4444;
+      --danger-light: #FEE2E2;
+      --gray-50: #F9FAFB;
+      --gray-100: #F3F4F6;
+      --gray-200: #E5E7EB;
+      --gray-300: #D1D5DB;
+      --gray-400: #9CA3AF;
+      --gray-500: #6B7280;
+      --gray-600: #4B5563;
+      --gray-700: #374151;
+      --gray-800: #1F2937;
+      --gray-900: #111827;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fff;
+      color: var(--gray-800);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    /* ── COVER PAGE ── */
+    .cover {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1E0045 0%, #3B0764 40%, #5B21B6 80%, #7C3AED 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 60px 40px;
+      page-break-after: always;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(124,58,237,0.3) 0%, transparent 70%);
+      top: -100px; right: -100px;
+      border-radius: 50%;
+    }
+    .cover::after {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(6,182,212,0.2) 0%, transparent 70%);
+      bottom: -80px; left: -80px;
+      border-radius: 50%;
+    }
+    .cover-logo {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 48px;
+      z-index: 1;
+    }
+    .cover h1 {
+      font-size: 42px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 20px;
+      z-index: 1;
+    }
+    .cover h1 span { color: #A78BFA; }
+    .cover-sub {
+      font-size: 16px;
+      color: rgba(255,255,255,0.65);
+      margin-bottom: 60px;
+      z-index: 1;
+      max-width: 500px;
+    }
+    .cover-meta {
+      display: flex;
+      gap: 40px;
+      z-index: 1;
+    }
+    .cover-meta-item {
+      text-align: left;
+    }
+    .cover-meta-item .label {
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 4px;
+    }
+    .cover-meta-item .value {
+      font-size: 14px;
+      color: rgba(255,255,255,0.9);
+      font-weight: 600;
+    }
+    .cover-divider {
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, #7C3AED, #06B6D4);
+      border-radius: 2px;
+      margin: 32px auto;
+      z-index: 1;
+    }
+
+    /* ── PAGE LAYOUT ── */
+    .page {
+      padding: 48px 52px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .page-break { page-break-before: always; }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--gray-100);
+    }
+    .section-badge {
+      background: var(--brand);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+    .section-header h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+
+    /* ── PHASE BANNER ── */
+    .phase-banner {
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+      color: #fff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .phase-banner.accent {
+      background: linear-gradient(135deg, #0891B2 0%, #0E7490 100%);
+    }
+    .phase-banner.success {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    }
+    .phase-banner h3 {
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .phase-banner p {
+      font-size: 12px;
+      opacity: 0.75;
+      margin-top: 3px;
+    }
+    .phase-banner .timeline-chip {
+      background: rgba(255,255,255,0.2);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* ── CARDS ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      border: 1.5px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 20px;
+      background: #fff;
+    }
+    .card.admin { border-top: 3px solid var(--brand); }
+    .card.dev   { border-top: 3px solid var(--accent); }
+    .card.client{ border-top: 3px solid var(--success); }
+
+    .card-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+    .card-icon.admin  { background: var(--brand-light); }
+    .card-icon.dev    { background: var(--accent-light); }
+    .card-icon.client { background: var(--success-light); }
+
+    .card h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 4px;
+    }
+    .card .role-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .card.admin .role-label  { color: var(--brand); }
+    .card.dev   .role-label  { color: var(--accent); }
+    .card.client .role-label { color: var(--success); }
+
+    .card ul {
+      list-style: none;
+      padding: 0;
+    }
+    .card ul li {
+      font-size: 11.5px;
+      color: var(--gray-600);
+      padding: 3px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .card ul li::before {
+      content: '→';
+      color: var(--gray-400);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ── FLOW DIAGRAM ── */
+    .flow-box {
+      background: var(--gray-50);
+      border: 1.5px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .flow-box h4 {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--gray-500);
+      margin-bottom: 16px;
+    }
+    .flow-steps {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .flow-step {
+      background: #fff;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-700);
+      text-align: center;
+      min-width: 90px;
+    }
+    .flow-step.active {
+      background: var(--brand-light);
+      border-color: var(--brand);
+      color: var(--brand-dark);
+    }
+    .flow-arrow {
+      color: var(--gray-300);
+      font-size: 18px;
+      font-weight: 300;
+    }
+
+    /* ── STATUS BADGES ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge.open    { background: var(--brand-light); color: var(--brand-dark); }
+    .badge.progress{ background: var(--warning-light); color: #92400E; }
+    .badge.resolved{ background: var(--success-light); color: #065F46; }
+    .badge.closed  { background: var(--gray-100); color: var(--gray-600); }
+
+    /* ── FEATURE TABLE ── */
+    .feature-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+      font-size: 12px;
+    }
+    .feature-table th {
+      background: var(--gray-900);
+      color: #fff;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+    .feature-table th:first-child { border-radius: 8px 0 0 0; }
+    .feature-table th:last-child  { border-radius: 0 8px 0 0; }
+    .feature-table td {
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--gray-100);
+      vertical-align: top;
+    }
+    .feature-table tr:nth-child(even) td { background: var(--gray-50); }
+    .feature-table tr:last-child td { border-bottom: none; }
+
+    .check { color: var(--success); font-weight: 700; }
+    .cross { color: var(--gray-300); }
+    .partial { color: var(--warning); font-weight: 700; }
+
+    /* ── MILESTONE BOARD ── */
+    .milestone-board {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .milestone-col {
+      background: var(--gray-50);
+      border: 1.5px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 12px 10px;
+    }
+    .milestone-col h5 {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--gray-500);
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .milestone-card {
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: 6px;
+      padding: 8px;
+      margin-bottom: 6px;
+      font-size: 10px;
+      color: var(--gray-600);
+      line-height: 1.4;
+    }
+
+    /* ── SPRINT TIMELINE ── */
+    .sprint-row {
+      display: flex;
+      gap: 0;
+      margin-bottom: 4px;
+    }
+    .sprint-label {
+      width: 90px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray-600);
+      padding: 8px 12px 8px 0;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+    .sprint-bar-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+    .sprint-bar {
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #fff;
+      margin-right: 8px;
+    }
+    .sprint-bar.s1 { background: #7C3AED; width: 100%; }
+    .sprint-bar.s2 { background: #5B21B6; width: 100%; }
+    .sprint-bar.s3 { background: #0891B2; width: 100%; }
+    .sprint-bar.s4 { background: #0E7490; width: 100%; }
+    .sprint-bar.s5 { background: #059669; width: 100%; }
+    .sprint-bar.s6 { background: #047857; width: 100%; }
+    .sprint-bar.s7 { background: #374151; width: 100%; }
+
+    /* ── TECH STACK TABLE ── */
+    .tech-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 12px;
+    }
+    .tech-table th {
+      background: var(--gray-800);
+      color: #fff;
+      padding: 9px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .tech-table th:first-child { border-radius: 8px 0 0 0; }
+    .tech-table th:last-child  { border-radius: 0 8px 0 0; }
+    .tech-table td {
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .tech-table tr:nth-child(even) td { background: var(--gray-50); }
+    .tech-table tr:last-child td { border-bottom: none; }
+    .tech-chip {
+      display: inline-flex;
+      background: var(--brand-light);
+      color: var(--brand-dark);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      margin: 2px;
+    }
+    .tech-chip.keep {
+      background: var(--success-light);
+      color: #065F46;
+    }
+    .tech-chip.new {
+      background: var(--accent-light);
+      color: #0C4A6E;
+    }
+
+    /* ── GHL MIGRATION ── */
+    .migration-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .migration-row:nth-child(odd) { background: var(--gray-50); }
+    .priority-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .priority-dot.p1 { background: var(--danger); }
+    .priority-dot.p2 { background: var(--warning); }
+    .priority-dot.p3 { background: var(--success); }
+    .migration-feature {
+      flex: 1;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+    .migration-arrow {
+      color: var(--gray-400);
+      font-size: 14px;
+    }
+    .migration-target {
+      font-size: 11px;
+      color: var(--brand-dark);
+      font-weight: 500;
+      text-align: right;
+    }
+
+    /* ── MONOSPACE BOX ── */
+    .mono-box {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      background: var(--gray-900);
+      color: #A5F3FC;
+      border-radius: 10px;
+      padding: 20px 22px;
+      margin-bottom: 20px;
+      line-height: 1.7;
+      overflow: hidden;
+    }
+    .mono-box .comment { color: #4B5563; }
+    .mono-box .keyword { color: #C084FC; }
+    .mono-box .string  { color: #86EFAC; }
+
+    /* ── SUMMARY CALLOUT ── */
+    .callout {
+      background: linear-gradient(135deg, var(--brand-light) 0%, #F0FEFF 100%);
+      border: 1.5px solid var(--brand);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+    .callout h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--brand-dark);
+      margin-bottom: 8px;
+    }
+    .callout p {
+      font-size: 12px;
+      color: var(--gray-700);
+      line-height: 1.6;
+    }
+
+    /* ── FOOTER ── */
+    .doc-footer {
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .doc-footer span {
+      font-size: 11px;
+      color: var(--gray-400);
+    }
+
+    /* ── PRINT ── */
+    @media print {
+      @page { margin: 0; size: A4; }
+      .cover { min-height: 100vh; }
+      .page-break { page-break-before: always; }
+      body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════ COVER -->
+<div class="cover">
+  <div class="cover-logo">Kazi Agency</div>
+  <h1>Dashboard &amp; Client Portal<br /><span>Architecture Plan</span></h1>
+  <p class="cover-sub">Scalable support, project delivery, and GHL migration roadmap for Admin, Developer, and Client roles.</p>
+  <div class="cover-divider"></div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <div class="label">Prepared for</div>
+      <div class="value">Kazi Agency Team</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Date</div>
+      <div class="value">June 2026</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Version</div>
+      <div class="value">v1.0 — Planning</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Stack</div>
+      <div class="value">Next.js 16 + Supabase</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ TOC -->
+<div class="page">
+  <div style="margin-top: 40px;">
+    <div class="section-header">
+      <div class="section-badge">Contents</div>
+      <h2>Table of Contents</h2>
+    </div>
+    <table class="feature-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Section</th>
+          <th>Description</th>
+          <th>Page</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>System Overview</td><td>Architecture diagram and platform entry points</td><td>3</td></tr>
+        <tr><td>2</td><td>Role Definitions</td><td>Admin, Developer, and Client permissions matrix</td><td>3</td></tr>
+        <tr><td>3</td><td>Phase 1 — Support Tickets</td><td>Full ticket lifecycle, fields, and flows</td><td>4</td></tr>
+        <tr><td>4</td><td>Phase 2 — Project Management</td><td>Milestone board, client approval, delivery flow</td><td>5</td></tr>
+        <tr><td>5</td><td>Phase 3 — GHL Migration</td><td>Feature priority mapping and integration bridge</td><td>6</td></tr>
+        <tr><td>6</td><td>Full Feature Map</td><td>Every feature listed by role and portal section</td><td>7</td></tr>
+        <tr><td>7</td><td>Tech Stack</td><td>Current stack + recommended additions</td><td>8</td></tr>
+        <tr><td>8</td><td>Build Sequence</td><td>Sprint-by-sprint implementation roadmap</td><td>9</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ SEC 1: OVERVIEW -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="section-badge">Section 1</div>
+    <h2>System Overview</h2>
+  </div>
+
+  <div class="callout">
+    <h4>Vision</h4>
+    <p>Build a unified agency platform at <strong>kaziagency.com/dashboard</strong> that handles client support tickets, project delivery tracking, and team management — starting as a layer on top of GHL/n8n, and progressively replacing GHL features over 12–18 months.</p>
+  </div>
+
+  <div class="flow-box">
+    <h4>Platform Entry Points</h4>
+    <div class="flow-steps" style="justify-content: center; gap: 16px; flex-wrap: wrap;">
+      <div style="text-align:center;">
+        <div class="flow-step active" style="background:#EDE9FE; border-color:#7C3AED; color:#5B21B6; width:130px; padding:16px;">
+          <div style="font-size:22px;margin-bottom:6px;">🛡️</div>
+          <div style="font-weight:700;">Admin Portal</div>
+          <div style="font-size:10px;opacity:0.7;">/admin</div>
+        </div>
+      </div>
+      <div style="text-align:center;">
+        <div class="flow-step active" style="background:#ECFEFF; border-color:#06B6D4; color:#0E7490; width:130px; padding:16px;">
+          <div style="font-size:22px;margin-bottom:6px;">💻</div>
+          <div style="font-weight:700;">Dev Portal</div>
+          <div style="font-size:10px;opacity:0.7;">/dashboard/dev</div>
+        </div>
+      </div>
+      <div style="text-align:center;">
+        <div class="flow-step active" style="background:#D1FAE5; border-color:#10B981; color:#065F46; width:130px; padding:16px;">
+          <div style="font-size:22px;margin-bottom:6px;">👤</div>
+          <div style="font-weight:700;">Client Portal</div>
+          <div style="font-size:10px;opacity:0.7;">/dashboard/me</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-box">
+    <h4>Integration Architecture — Current → Future</h4>
+    <div class="flow-steps" style="flex-wrap:wrap; gap:10px; align-items:center;">
+      <div class="flow-step" style="background:#FEF3C7;border-color:#F59E0B;color:#92400E;">GHL<br/><small style="font-weight:400;">CRM / Comms</small></div>
+      <div class="flow-arrow">⇄</div>
+      <div class="flow-step" style="background:#F3F4F6;border-color:#6B7280;color:#374151;">n8n<br/><small style="font-weight:400;">Automation</small></div>
+      <div class="flow-arrow">⇄</div>
+      <div class="flow-step active">Kazi API<br/><small style="font-weight:400;">Next.js Routes</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:#EDE9FE;border-color:#7C3AED;color:#5B21B6;">Dashboard<br/><small style="font-weight:400;">All Portals</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:#D1FAE5;border-color:#10B981;color:#065F46;">Supabase<br/><small style="font-weight:400;">DB + Storage</small></div>
+    </div>
+  </div>
+
+  <!-- ── Roles -->
+  <div class="section-header" style="margin-top:36px;">
+    <div class="section-badge">Section 2</div>
+    <h2>Role Definitions &amp; Permissions</h2>
+  </div>
+
+  <div class="card-grid">
+    <div class="card admin">
+      <div class="card-icon admin">🛡️</div>
+      <h4>Admin</h4>
+      <div class="role-label">Agency Owner / Manager</div>
+      <ul>
+        <li>Full access to everything</li>
+        <li>Create &amp; manage user accounts</li>
+        <li>Assign developers to tickets &amp; projects</li>
+        <li>View all KPIs &amp; reports</li>
+        <li>Manage billing &amp; invoices</li>
+        <li>Configure GHL sync &amp; n8n webhooks</li>
+        <li>Override any ticket or milestone</li>
+        <li>Manage canned responses &amp; SLA rules</li>
+        <li>Access knowledge base editor</li>
+      </ul>
+    </div>
+    <div class="card dev">
+      <div class="card-icon dev">💻</div>
+      <h4>Developer</h4>
+      <div class="role-label">Agency Team Member</div>
+      <ul>
+        <li>View &amp; update assigned tickets only</li>
+        <li>Add internal notes (hidden from client)</li>
+        <li>Request files / info from client</li>
+        <li>Upload deliverable files</li>
+        <li>Mark milestones complete</li>
+        <li>Log work hours per task</li>
+        <li>Chat in ticket threads</li>
+        <li>View own task board &amp; workload</li>
+        <li>Cannot access billing or other clients</li>
+      </ul>
+    </div>
+    <div class="card client">
+      <div class="card-icon client">👤</div>
+      <h4>Client</h4>
+      <div class="role-label">Paying Customer</div>
+      <ul>
+        <li>Access own project data only</li>
+        <li>Submit new support tickets</li>
+        <li>View ticket status &amp; reply</li>
+        <li>View project progress &amp; milestones</li>
+        <li>Approve or request revision on deliverables</li>
+        <li>Download final assets</li>
+        <li>View invoices &amp; payment status</li>
+        <li>Access knowledge base (read-only)</li>
+        <li>Cannot see internal team notes</li>
+      </ul>
+    </div>
+  </div>
+
+  <table class="feature-table">
+    <thead>
+      <tr>
+        <th>Permission</th>
+        <th style="text-align:center;">Admin</th>
+        <th style="text-align:center;">Developer</th>
+        <th style="text-align:center;">Client</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>View all tickets</td><td style="text-align:center;" class="check">✓</td><td style="text-align:center;" class="cross">—</td><td style="text-align:center;" class="cross">—</td></tr>
+      <tr><td>View own / assigned tickets</td><td style="text-align:center;" class="check">✓</td><td style="text-align:center;" class="check">✓</td><td style="text-align:center;" class="check">✓</td></tr>
+      <tr><td>Reassign tickets</td><td style="text-align:center;" class="check">✓</td><td style="text-align:center;" class="cross">—</td><td style="text-align:center;" class="cross">—</td></tr>
+      <tr><td>Add internal notes</td><td style="text-align:center;" class="check">✓</td><td style="text-align:center;" class="check">✓</td><td style="text-align:center;" class="cross">—</td></tr>
+      <tr><td>View all client projects</td><td style="text-align:center;" class="check">✓</td><td style="text-align:center;" class="cross">—</td><td style="text-align:center;" class="cross">—</td></tr>
+      <tr><td>Approve deliverables</td><td style="text-align:center;" class="check">✓</td><td style="text-align:center;" class="cross">—</td><td style="text-align:center;" class="check">✓</td></tr>
+      <tr><td>Upload deliverable files</td><td style="text-align:center;" class="check">✓</td><td style="text-align:center;" class="check">✓</td><td style="text-align:center;" class="cross">—</td></tr>
+      <tr><td>View invoices / billing</td><td style="text-align:center;" class="check">✓</td><td style="text-align:center;" class="cross">—</td><td style="text-align:center;" class="partial">Own only</td></tr>
+      <tr><td>Manage team accounts</td><td style="text-align:center;" class="check">✓</td><td style="text-align:center;" class="cross">—</td><td style="text-align:center;" class="cross">—</td></tr>
+      <tr><td>Configure integrations</td><td style="text-align:center;" class="check">✓</td><td style="text-align:center;" class="cross">—</td><td style="text-align:center;" class="cross">—</td></tr>
+      <tr><td>Download final assets</td><td style="text-align:center;" class="check">✓</td><td style="text-align:center;" class="check">✓</td><td style="text-align:center;" class="check">✓</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ SEC 3: TICKETS -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="section-badge">Section 3</div>
+    <h2>Phase 1 — Support Ticket System</h2>
+  </div>
+
+  <div class="phase-banner">
+    <div>
+      <h3>Phase 1: Support Tickets</h3>
+      <p>First build — immediate value, replaces GHL's manual support handling</p>
+    </div>
+    <div class="timeline-chip">Sprints 1–4 &nbsp;|&nbsp; Weeks 1–8</div>
+  </div>
+
+  <div class="flow-box">
+    <h4>Ticket Lifecycle — Status Flow</h4>
+    <div class="flow-steps" style="flex-wrap:wrap; gap:8px;">
+      <div class="flow-step" style="background:#EDE9FE;border-color:#7C3AED;color:#5B21B6;font-size:11px;">🆕 Open</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:#FEF3C7;border-color:#F59E0B;color:#92400E;font-size:11px;">🔄 In Progress</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:#ECFEFF;border-color:#06B6D4;color:#0E7490;font-size:11px;">⏳ Waiting Client</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:#D1FAE5;border-color:#10B981;color:#065F46;font-size:11px;">✅ Resolved</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:#F3F4F6;border-color:#9CA3AF;color:#6B7280;font-size:11px;">🔒 Closed</div>
+    </div>
+    <div style="margin-top:12px; font-size:11px; color:var(--gray-500);">
+      <strong style="color:var(--gray-700);">Re-open path:</strong> Client can re-open a Resolved ticket within 7 days. After that, Closed requires Admin action.
+    </div>
+  </div>
+
+  <div class="card-grid-2" style="margin-bottom:20px;">
+    <div class="card">
+      <h4 style="margin-bottom:12px;">Ticket Categories</h4>
+      <ul>
+        <li>🐛 Bug / Issue Report</li>
+        <li>✨ Feature / Change Request</li>
+        <li>❓ General Question</li>
+        <li>📦 Delivery / Asset Request</li>
+        <li>💳 Billing / Invoice</li>
+        <li>🚀 Onboarding Help</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4 style="margin-bottom:12px;">Priority Levels &amp; SLA</h4>
+      <ul>
+        <li>🔴 Critical — 2 hour first response</li>
+        <li>🟠 High — 8 hour first response</li>
+        <li>🟡 Medium — 24 hour first response</li>
+        <li>🟢 Low — 48 hour first response</li>
+        <li>⏰ SLA breach alert to Admin</li>
+        <li>📊 SLA metrics in admin report</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="flow-box">
+    <h4>Ticket Thread Flow — Who Does What</h4>
+    <table class="feature-table" style="margin-bottom:0;">
+      <thead>
+        <tr>
+          <th>Actor</th>
+          <th>Action</th>
+          <th>Notification Sent To</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Client</td>
+          <td>Submits ticket with category, priority, description, files</td>
+          <td>Admin (email + in-app) · Auto-assign dev notified</td>
+        </tr>
+        <tr>
+          <td>System</td>
+          <td>Auto-assigns developer based on category rules, sends Ticket ID + ETA to client</td>
+          <td>Client (email confirmation)</td>
+        </tr>
+        <tr>
+          <td>Developer</td>
+          <td>Updates status → In Progress, adds internal notes</td>
+          <td>Admin sees status change</td>
+        </tr>
+        <tr>
+          <td>Developer</td>
+          <td>Requests info or files from client (status → Waiting Client)</td>
+          <td>Client (email + in-app)</td>
+        </tr>
+        <tr>
+          <td>Client</td>
+          <td>Replies in thread, uploads requested file</td>
+          <td>Developer + Admin (in-app)</td>
+        </tr>
+        <tr>
+          <td>Developer</td>
+          <td>Marks ticket Resolved with resolution summary</td>
+          <td>Client (email + in-app)</td>
+        </tr>
+        <tr>
+          <td>Client</td>
+          <td>Confirms or re-opens within 7 days</td>
+          <td>Developer + Admin</td>
+        </tr>
+        <tr>
+          <td>Admin</td>
+          <td>Can override status, reassign, or escalate at any point</td>
+          <td>Relevant party notified</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flow-box">
+    <h4>Ticket Data Model — Core Fields</h4>
+    <div class="mono-box" style="margin-bottom:0;">
+<span class="comment">// Ticket Schema</span>
+{
+  id:            <span class="string">"TKT-0042"</span>,
+  title:         <span class="string">"Website contact form not sending emails"</span>,
+  category:      <span class="keyword">BUG | FEATURE | QUESTION | DELIVERY | BILLING</span>,
+  priority:      <span class="keyword">CRITICAL | HIGH | MEDIUM | LOW</span>,
+  status:        <span class="keyword">OPEN | IN_PROGRESS | WAITING_CLIENT | RESOLVED | CLOSED</span>,
+  client_id:     <span class="string">"uuid"</span>,
+  project_id:    <span class="string">"uuid"</span>,
+  assigned_dev:  <span class="string">"uuid"</span>,
+  thread:        [{ author, role, body, attachments, created_at, is_internal }],
+  sla_due:       <span class="string">"2026-06-10T10:00:00Z"</span>,
+  created_at:    <span class="string">"timestamp"</span>,
+  resolved_at:   <span class="string">"timestamp | null"</span>
+}
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ SEC 4: PROJECTS -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="section-badge">Section 4</div>
+    <h2>Phase 2 — Project Management</h2>
+  </div>
+
+  <div class="phase-banner accent">
+    <div>
+      <h3>Phase 2: Project &amp; Milestone Tracking</h3>
+      <p>From contract signing to final asset delivery — full visibility for client &amp; team</p>
+    </div>
+    <div class="timeline-chip">Sprints 5–6 &nbsp;|&nbsp; Months 3–4</div>
+  </div>
+
+  <div class="flow-box">
+    <h4>Project Stage Pipeline</h4>
+    <div class="milestone-board">
+      <div class="milestone-col" style="border-top:3px solid #7C3AED;">
+        <h5>Onboarding</h5>
+        <div class="milestone-card">Intake form signed</div>
+        <div class="milestone-card">Contract sent</div>
+        <div class="milestone-card">First payment</div>
+      </div>
+      <div class="milestone-col" style="border-top:3px solid #8B5CF6;">
+        <h5>Discovery</h5>
+        <div class="milestone-card">Brand call</div>
+        <div class="milestone-card">Questionnaire</div>
+        <div class="milestone-card">Strategy doc</div>
+      </div>
+      <div class="milestone-col" style="border-top:3px solid #0891B2;">
+        <h5>Design</h5>
+        <div class="milestone-card">Wireframes</div>
+        <div class="milestone-card">Mockups</div>
+        <div class="milestone-card">Client approval</div>
+      </div>
+      <div class="milestone-col" style="border-top:3px solid #0E7490;">
+        <h5>Build</h5>
+        <div class="milestone-card">Dev sprints</div>
+        <div class="milestone-card">Milestones</div>
+        <div class="milestone-card">QA testing</div>
+      </div>
+      <div class="milestone-col" style="border-top:3px solid #059669;">
+        <h5>Review</h5>
+        <div class="milestone-card">Client review</div>
+        <div class="milestone-card">Revisions</div>
+        <div class="milestone-card">Final sign-off</div>
+      </div>
+      <div class="milestone-col" style="border-top:3px solid #047857;">
+        <h5>Delivered</h5>
+        <div class="milestone-card">Assets handoff</div>
+        <div class="milestone-card">Training</div>
+        <div class="milestone-card">Support plan</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-grid-2">
+    <div class="card">
+      <h4 style="margin-bottom:10px;">Milestone Object</h4>
+      <ul>
+        <li>Title &amp; description</li>
+        <li>Due date + assignee(s)</li>
+        <li>Deliverable file upload slot</li>
+        <li>Status: Pending / In Progress / In Review / Done</li>
+        <li>Client approval button (Approve / Request Revision)</li>
+        <li>Comments thread per milestone</li>
+        <li>Revision count tracker</li>
+        <li>Completion timestamp</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4 style="margin-bottom:10px;">Client Project View (simplified)</h4>
+      <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:14px; font-size:11px;">
+        <div style="font-weight:700; margin-bottom:8px;">Your Project: Brand Redesign</div>
+        <div style="background:var(--gray-200); border-radius:4px; height:8px; margin-bottom:12px; overflow:hidden;">
+          <div style="background:var(--brand); width:65%; height:100%; border-radius:4px;"></div>
+        </div>
+        <div style="color:var(--gray-500); font-size:10px; margin-bottom:12px;">65% complete</div>
+        <div style="margin-bottom:5px; color:var(--success);">✅ Onboarding complete</div>
+        <div style="margin-bottom:5px; color:var(--success);">✅ Brand strategy approved</div>
+        <div style="margin-bottom:5px; color:var(--warning);">🔄 Website design — due Jun 20</div>
+        <div style="margin-bottom:5px; color:var(--gray-400);">⏳ Development</div>
+        <div style="color:var(--gray-400);">⏳ Launch</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-box">
+    <h4>Deliverable Approval Flow</h4>
+    <div class="flow-steps" style="flex-wrap:wrap; gap:10px;">
+      <div class="flow-step" style="font-size:11px; min-width:80px; text-align:center;">Dev uploads<br/>deliverable</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="font-size:11px; min-width:80px; text-align:center;">Client notified<br/>(email + app)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step active" style="font-size:11px; min-width:80px; text-align:center;">Client reviews<br/>in portal</div>
+      <div class="flow-arrow">→</div>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div class="flow-step" style="font-size:11px; min-width:100px; background:#D1FAE5; border-color:#10B981; color:#065F46;">✅ Approve<br/>→ Next milestone</div>
+        <div class="flow-step" style="font-size:11px; min-width:100px; background:#FEE2E2; border-color:#EF4444; color:#991B1B;">✏️ Request Revision<br/>→ Back to Dev</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ SEC 5: GHL -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="section-badge">Section 5</div>
+    <h2>Phase 3 — GHL Migration Plan</h2>
+  </div>
+
+  <div class="phase-banner success">
+    <div>
+      <h3>Phase 3: GHL → Own Platform Migration</h3>
+      <p>Progressive feature migration — keep GHL alive until each module is stable on your platform</p>
+    </div>
+    <div class="timeline-chip">Month 6 → Month 18</div>
+  </div>
+
+  <div class="card-grid" style="margin-bottom:24px;">
+    <div class="card" style="border-top:3px solid var(--danger);">
+      <h4 style="color:var(--danger); margin-bottom:8px;">🔴 Priority 1 — Migrate First</h4>
+      <p style="font-size:11px; color:var(--gray-500); margin-bottom:10px;">Easiest ROI, low complexity</p>
+      <ul>
+        <li>Contact / CRM database</li>
+        <li>Pipeline stage tracking</li>
+        <li>Email notifications (Resend)</li>
+        <li>Intake / lead capture forms</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:3px solid var(--warning);">
+      <h4 style="color:#92400E; margin-bottom:8px;">🟡 Priority 2 — Moderate</h4>
+      <p style="font-size:11px; color:var(--gray-500); margin-bottom:10px;">Moderate complexity, high value</p>
+      <ul>
+        <li>Two-way messaging (SMS + email)</li>
+        <li>Appointment booking system</li>
+        <li>Review / reputation management</li>
+        <li>Automated follow-up sequences</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:3px solid var(--success);">
+      <h4 style="color:var(--success); margin-bottom:8px;">🟢 Priority 3 — Keep GHL Longest</h4>
+      <p style="font-size:11px; color:var(--gray-500); margin-bottom:10px;">Complex — only migrate when P1+P2 stable</p>
+      <ul>
+        <li>Automation / workflow builder</li>
+        <li>Advanced reporting dashboards</li>
+        <li>Social media scheduling</li>
+        <li>Funnel / page builder</li>
+      </ul>
+    </div>
+  </div>
+
+  <table class="feature-table">
+    <thead>
+      <tr>
+        <th>GHL Feature</th>
+        <th>Current State</th>
+        <th>Migration Target</th>
+        <th>Tool / Service</th>
+        <th>Priority</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>CRM contacts</td>
+        <td>GHL database</td>
+        <td>Own PostgreSQL table</td>
+        <td>Supabase</td>
+        <td><span class="badge" style="background:#FEE2E2;color:#991B1B;">P1</span></td>
+      </tr>
+      <tr>
+        <td>Pipeline stages</td>
+        <td>GHL pipeline</td>
+        <td>Project milestone board</td>
+        <td>Own system</td>
+        <td><span class="badge" style="background:#FEE2E2;color:#991B1B;">P1</span></td>
+      </tr>
+      <tr>
+        <td>Email notifications</td>
+        <td>GHL email</td>
+        <td>Transactional email</td>
+        <td>Resend</td>
+        <td><span class="badge" style="background:#FEE2E2;color:#991B1B;">P1</span></td>
+      </tr>
+      <tr>
+        <td>Form submissions</td>
+        <td>GHL forms</td>
+        <td>Own forms → DB</td>
+        <td>Next.js API</td>
+        <td><span class="badge" style="background:#FEE2E2;color:#991B1B;">P1</span></td>
+      </tr>
+      <tr>
+        <td>Two-way SMS/email</td>
+        <td>GHL conversations</td>
+        <td>Unified inbox</td>
+        <td>Twilio + Resend</td>
+        <td><span class="badge" style="background:#FEF3C7;color:#92400E;">P2</span></td>
+      </tr>
+      <tr>
+        <td>Appointment booking</td>
+        <td>GHL calendar</td>
+        <td>Booking system</td>
+        <td>Cal.com or custom</td>
+        <td><span class="badge" style="background:#FEF3C7;color:#92400E;">P2</span></td>
+      </tr>
+      <tr>
+        <td>Review management</td>
+        <td>GHL reputation</td>
+        <td>API layer</td>
+        <td>Google / Trustpilot API</td>
+        <td><span class="badge" style="background:#FEF3C7;color:#92400E;">P2</span></td>
+      </tr>
+      <tr>
+        <td>Automations</td>
+        <td>GHL + n8n</td>
+        <td>Keep n8n → migrate later</td>
+        <td>n8n (self-hosted)</td>
+        <td><span class="badge" style="background:#D1FAE5;color:#065F46;">P3</span></td>
+      </tr>
+      <tr>
+        <td>Analytics dashboards</td>
+        <td>GHL reports</td>
+        <td>Own dashboards</td>
+        <td>Recharts (installed)</td>
+        <td><span class="badge" style="background:#D1FAE5;color:#065F46;">P3</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <h4>n8n Integration Bridge Strategy</h4>
+    <p>During the entire migration period, keep n8n as the automation glue. Add webhook endpoints to your Next.js API that n8n can trigger — so GHL, your dashboard, and external services all communicate through n8n without breaking existing workflows. Gradually shift automation logic to native Next.js API routes only after each GHL module is fully migrated and stable.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ SEC 6: FEATURES -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="section-badge">Section 6</div>
+    <h2>Full Feature Map by Role</h2>
+  </div>
+
+  <div style="margin-bottom:24px;">
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:14px;">
+      <div style="width:14px;height:14px;background:var(--brand);border-radius:3px;"></div>
+      <span style="font-size:14px; font-weight:700; color:var(--gray-900);">Admin Dashboard — All Features</span>
+    </div>
+    <table class="feature-table">
+      <thead><tr><th>Module</th><th>Feature</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="4" style="font-weight:600;color:var(--brand);vertical-align:top;padding-top:12px;">Overview</td><td>KPI cards</td><td>Open tickets, active projects, MRR, churn rate at a glance</td></tr>
+        <tr><td>Team workload</td><td>Heatmap showing each developer's assigned tickets &amp; hours</td></tr>
+        <tr><td>SLA breach alerts</td><td>Real-time alerts when tickets approach or exceed SLA thresholds</td></tr>
+        <tr><td>Activity feed</td><td>Latest actions across all tickets, projects, and team</td></tr>
+
+        <tr><td rowspan="4" style="font-weight:600;color:var(--brand);vertical-align:top;padding-top:12px;">Tickets</td><td>All tickets view</td><td>Filter by status, priority, category, date, client, developer</td></tr>
+        <tr><td>Assign / escalate</td><td>Reassign tickets, escalate priority, override SLA</td></tr>
+        <tr><td>SLA config</td><td>Set response time rules per ticket category</td></tr>
+        <tr><td>Canned responses</td><td>Reusable reply templates for common support scenarios</td></tr>
+
+        <tr><td rowspan="3" style="font-weight:600;color:var(--brand);vertical-align:top;padding-top:12px;">Projects</td><td>All projects board</td><td>Kanban or list view of every active client project + stage</td></tr>
+        <tr><td>Milestone manager</td><td>Create, edit, reorder milestones, set due dates and assignees</td></tr>
+        <tr><td>Deliverable oversight</td><td>Review what devs uploaded before client sees it (optional gate)</td></tr>
+
+        <tr><td rowspan="3" style="font-weight:600;color:var(--brand);vertical-align:top;padding-top:12px;">Clients &amp; Team</td><td>Client CRM table</td><td>All clients with service plan, MRR, project status, last contact</td></tr>
+        <tr><td>Create client account</td><td>Invite client via email, set service package, link project</td></tr>
+        <tr><td>Developer management</td><td>Add / remove devs, assign roles, view individual performance</td></tr>
+
+        <tr><td rowspan="3" style="font-weight:600;color:var(--brand);vertical-align:top;padding-top:12px;">Reports</td><td>Ticket analytics</td><td>Resolution time, re-open rate, CSAT score per period</td></tr>
+        <tr><td>Revenue report</td><td>MRR by service, invoice status, payment history</td></tr>
+        <tr><td>Team performance</td><td>Tickets resolved, avg response time, workload by developer</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-bottom:24px;">
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:14px;">
+      <div style="width:14px;height:14px;background:var(--accent);border-radius:3px;"></div>
+      <span style="font-size:14px; font-weight:700; color:var(--gray-900);">Developer Dashboard</span>
+    </div>
+    <table class="feature-table">
+      <thead><tr><th>Module</th><th>Feature</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>My Tickets</td><td>Priority queue</td><td>Assigned tickets sorted by SLA urgency, with quick status update</td></tr>
+        <tr><td>My Tickets</td><td>Internal notes</td><td>Add context / research notes visible only to team, not client</td></tr>
+        <tr><td>My Tickets</td><td>Request info</td><td>Ask client for file or clarification — changes status to Waiting Client</td></tr>
+        <tr><td>My Projects</td><td>Milestone board</td><td>View assigned milestones, upload deliverables, mark complete</td></tr>
+        <tr><td>My Projects</td><td>Work log</td><td>Log hours per milestone for internal tracking</td></tr>
+        <tr><td>Inbox</td><td>Notifications</td><td>All ticket replies, approvals, and re-opens in one feed</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div>
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:14px;">
+      <div style="width:14px;height:14px;background:var(--success);border-radius:3px;"></div>
+      <span style="font-size:14px; font-weight:700; color:var(--gray-900);">Client Portal</span>
+    </div>
+    <table class="feature-table">
+      <thead><tr><th>Module</th><th>Feature</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>Home</td><td>Project snapshot</td><td>Progress bar, open ticket count, next milestone date, quick actions</td></tr>
+        <tr><td>Support</td><td>Submit ticket</td><td>Form with category, priority, description, file attachments</td></tr>
+        <tr><td>Support</td><td>Ticket history</td><td>All own tickets with status, thread, and timeline</td></tr>
+        <tr><td>My Project</td><td>Timeline view</td><td>Visual milestone timeline with status indicators</td></tr>
+        <tr><td>My Project</td><td>Approve deliverable</td><td>Review uploaded files, approve or request specific revisions</td></tr>
+        <tr><td>My Project</td><td>Asset downloads</td><td>Access final delivered files, organized by milestone</td></tr>
+        <tr><td>Billing</td><td>Invoice history</td><td>View all invoices, payment status, download PDF receipts</td></tr>
+        <tr><td>Knowledge Base</td><td>Help articles</td><td>How-to guides and FAQs specific to their service package</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ SEC 7: STACK -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="section-badge">Section 7</div>
+    <h2>Technology Stack</h2>
+  </div>
+
+  <table class="tech-table" style="margin-bottom:24px;">
+    <thead>
+      <tr>
+        <th>Layer</th>
+        <th>Current (Keep)</th>
+        <th>Add for Dashboard</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Frontend Framework</strong></td>
+        <td><span class="tech-chip keep">Next.js 16</span></td>
+        <td><span class="tech-chip new">/dashboard routes</span></td>
+        <td>App Router, RSC — already installed</td>
+      </tr>
+      <tr>
+        <td><strong>UI Components</strong></td>
+        <td><span class="tech-chip keep">shadcn/ui</span> <span class="tech-chip keep">Tailwind CSS</span></td>
+        <td>—</td>
+        <td>Already installed — all components ready</td>
+      </tr>
+      <tr>
+        <td><strong>Charts &amp; Analytics</strong></td>
+        <td><span class="tech-chip keep">Recharts</span></td>
+        <td>—</td>
+        <td>Already installed — use for KPI dashboards</td>
+      </tr>
+      <tr>
+        <td><strong>Database</strong></td>
+        <td>—</td>
+        <td><span class="tech-chip new">Supabase PostgreSQL</span></td>
+        <td>Managed Postgres, Row Level Security for role isolation</td>
+      </tr>
+      <tr>
+        <td><strong>Authentication</strong></td>
+        <td>—</td>
+        <td><span class="tech-chip new">NextAuth.js v5</span></td>
+        <td>Role-based sessions: ADMIN | DEVELOPER | CLIENT</td>
+      </tr>
+      <tr>
+        <td><strong>Real-time Updates</strong></td>
+        <td>—</td>
+        <td><span class="tech-chip new">Supabase Realtime</span></td>
+        <td>Live ticket thread updates, status changes, notifications</td>
+      </tr>
+      <tr>
+        <td><strong>File Storage</strong></td>
+        <td>—</td>
+        <td><span class="tech-chip new">Supabase Storage</span></td>
+        <td>Secure file uploads — deliverables, ticket attachments</td>
+      </tr>
+      <tr>
+        <td><strong>Email Delivery</strong></td>
+        <td><span class="tech-chip keep">GHL (bridge)</span></td>
+        <td><span class="tech-chip new">Resend</span></td>
+        <td>Transactional emails for ticket notifications, approvals</td>
+      </tr>
+      <tr>
+        <td><strong>Automation</strong></td>
+        <td><span class="tech-chip keep">n8n</span></td>
+        <td><span class="tech-chip new">Webhook endpoints</span></td>
+        <td>Keep n8n, add Next.js API routes as n8n triggers</td>
+      </tr>
+      <tr>
+        <td><strong>Payments / Billing</strong></td>
+        <td>—</td>
+        <td><span class="tech-chip new">Stripe</span></td>
+        <td>Invoice generation, subscription management, payment links</td>
+      </tr>
+      <tr>
+        <td><strong>SMS (Phase 2)</strong></td>
+        <td>GHL SMS</td>
+        <td><span class="tech-chip new">Twilio</span></td>
+        <td>Two-way SMS for ticket updates and client messaging</td>
+      </tr>
+      <tr>
+        <td><strong>Deployment</strong></td>
+        <td><span class="tech-chip keep">Vercel</span></td>
+        <td>—</td>
+        <td>Already deployed — no changes needed</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <h4>Why Supabase as the core data layer?</h4>
+    <p>Supabase gives you PostgreSQL (full relational DB for tickets, projects, clients), Realtime subscriptions (live thread updates without polling), Storage (secure file uploads with access control), and Row Level Security (database-enforced role isolation — a client literally cannot query another client's rows). It pairs perfectly with Next.js and eliminates the need for separate services for DB, storage, and real-time in Phase 1.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ SEC 8: SPRINTS -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="section-badge">Section 8</div>
+    <h2>Build Sequence — Sprint Roadmap</h2>
+  </div>
+
+  <div style="margin-bottom:28px;">
+    <!-- Sprint 1 -->
+    <div style="margin-bottom:16px;">
+      <div style="display:flex; gap:12px; margin-bottom:8px; align-items:center;">
+        <div style="background:var(--brand); color:#fff; font-size:10px; font-weight:700; padding:3px 10px; border-radius:4px; white-space:nowrap;">SPRINT 1–2</div>
+        <div style="font-size:13px; font-weight:700; color:var(--gray-900);">Foundation — Auth, Roles &amp; Ticket Core</div>
+        <div style="margin-left:auto; font-size:11px; color:var(--gray-500);">Weeks 1–4</div>
+      </div>
+      <div style="background:var(--gray-50); border:1.5px solid var(--gray-200); border-radius:10px; padding:16px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; font-size:12px;">
+          <div>☑ Set up Supabase project + database schema</div>
+          <div>☑ NextAuth.js with ADMIN / DEVELOPER / CLIENT roles</div>
+          <div>☑ Admin: create client accounts + send invite email</div>
+          <div>☑ Client: login, view dashboard home</div>
+          <div>☑ Ticket submission form (client)</div>
+          <div>☑ Ticket list view (all three roles)</div>
+          <div>☑ Basic status update (developer)</div>
+          <div>☑ Email notification on ticket create (Resend)</div>
+        </div>
+        <div style="margin-top:12px; padding:10px; background:#fff; border-radius:6px; border:1px solid var(--gray-200); font-size:11px; color:var(--gray-600);">
+          <strong>Deliverable:</strong> Admin can create a client → client receives invite → client logs in and submits a support ticket → developer sees it assigned.
+        </div>
+      </div>
+    </div>
+
+    <!-- Sprint 2 -->
+    <div style="margin-bottom:16px;">
+      <div style="display:flex; gap:12px; margin-bottom:8px; align-items:center;">
+        <div style="background:#5B21B6; color:#fff; font-size:10px; font-weight:700; padding:3px 10px; border-radius:4px; white-space:nowrap;">SPRINT 3–4</div>
+        <div style="font-size:13px; font-weight:700; color:var(--gray-900);">Full Ticket Lifecycle + Admin Dashboard</div>
+        <div style="margin-left:auto; font-size:11px; color:var(--gray-500);">Weeks 5–8</div>
+      </div>
+      <div style="background:var(--gray-50); border:1.5px solid var(--gray-200); border-radius:10px; padding:16px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; font-size:12px;">
+          <div>☑ Thread / comment system (client + dev + admin)</div>
+          <div>☑ Internal notes (hidden from client)</div>
+          <div>☑ File upload on tickets (Supabase Storage)</div>
+          <div>☑ Status flow: all transitions + email notifications</div>
+          <div>☑ SLA timer + breach alerts to admin</div>
+          <div>☑ Canned responses library (admin)</div>
+          <div>☑ Admin: assign / reassign developer</div>
+          <div>☑ Admin KPI overview: open tickets, avg resolution time</div>
+        </div>
+        <div style="margin-top:12px; padding:10px; background:#fff; border-radius:6px; border:1px solid var(--gray-200); font-size:11px; color:var(--gray-600);">
+          <strong>Deliverable:</strong> Complete ticket system with full thread, files, SLA tracking. Admin has workload view. Client gets email on every update.
+        </div>
+      </div>
+    </div>
+
+    <!-- Sprint 3 -->
+    <div style="margin-bottom:16px;">
+      <div style="display:flex; gap:12px; margin-bottom:8px; align-items:center;">
+        <div style="background:#0891B2; color:#fff; font-size:10px; font-weight:700; padding:3px 10px; border-radius:4px; white-space:nowrap;">SPRINT 5–6</div>
+        <div style="font-size:13px; font-weight:700; color:var(--gray-900);">Project Management + Milestone Board</div>
+        <div style="margin-left:auto; font-size:11px; color:var(--gray-500);">Weeks 9–12</div>
+      </div>
+      <div style="background:var(--gray-50); border:1.5px solid var(--gray-200); border-radius:10px; padding:16px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; font-size:12px;">
+          <div>☑ Project model + client project link</div>
+          <div>☑ Milestone CRUD (admin + developer)</div>
+          <div>☑ Deliverable file upload per milestone</div>
+          <div>☑ Client approval / revision request flow</div>
+          <div>☑ Client project progress view (timeline)</div>
+          <div>☑ Asset download section for client</div>
+          <div>☑ Admin: all projects board view</div>
+          <div>☑ n8n webhook endpoint for GHL pipeline sync</div>
+        </div>
+        <div style="margin-top:12px; padding:10px; background:#fff; border-radius:6px; border:1px solid var(--gray-200); font-size:11px; color:var(--gray-600);">
+          <strong>Deliverable:</strong> Full project delivery flow — dev uploads → client approves → assets downloadable. GHL pipeline stages sync bidirectionally via n8n.
+        </div>
+      </div>
+    </div>
+
+    <!-- Sprint 4 -->
+    <div style="margin-bottom:16px;">
+      <div style="display:flex; gap:12px; margin-bottom:8px; align-items:center;">
+        <div style="background:#059669; color:#fff; font-size:10px; font-weight:700; padding:3px 10px; border-radius:4px; white-space:nowrap;">SPRINT 7–8</div>
+        <div style="font-size:13px; font-weight:700; color:var(--gray-900);">Billing, Reporting &amp; Knowledge Base</div>
+        <div style="margin-left:auto; font-size:11px; color:var(--gray-500);">Month 4</div>
+      </div>
+      <div style="background:var(--gray-50); border:1.5px solid var(--gray-200); border-radius:10px; padding:16px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; font-size:12px;">
+          <div>☑ Stripe invoice generation + payment links</div>
+          <div>☑ Client billing history view</div>
+          <div>☑ Admin revenue dashboard (Recharts)</div>
+          <div>☑ Ticket analytics report (resolution time, CSAT)</div>
+          <div>☑ Knowledge base — admin creates articles</div>
+          <div>☑ KB — client reads by service category</div>
+          <div>☑ Developer performance metrics</div>
+          <div>☑ CSAT survey on ticket close</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sprint 5+ -->
+    <div style="margin-bottom:16px;">
+      <div style="display:flex; gap:12px; margin-bottom:8px; align-items:center;">
+        <div style="background:#374151; color:#fff; font-size:10px; font-weight:700; padding:3px 10px; border-radius:4px; white-space:nowrap;">SPRINT 9+</div>
+        <div style="font-size:13px; font-weight:700; color:var(--gray-900);">GHL Migration — Phase 3 Features</div>
+        <div style="margin-left:auto; font-size:11px; color:var(--gray-500);">Month 5 → 18</div>
+      </div>
+      <div style="background:var(--gray-50); border:1.5px solid var(--gray-200); border-radius:10px; padding:16px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; font-size:12px;">
+          <div>☑ CRM contact table (migrate from GHL)</div>
+          <div>☑ Unified inbox (SMS + email via Twilio + Resend)</div>
+          <div>☑ Appointment booking system</div>
+          <div>☑ Reputation management (Google Reviews API)</div>
+          <div>☑ Advanced analytics replacing GHL reports</div>
+          <div>☑ Automation builder (or keep n8n permanently)</div>
+          <div>☑ Social media scheduling integration</div>
+          <div>☑ Full GHL decommission (when ready)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary table -->
+  <table class="feature-table">
+    <thead>
+      <tr>
+        <th>Sprint</th>
+        <th>Duration</th>
+        <th>Core Deliverable</th>
+        <th>GHL Dependency</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Sprint 1–2</td><td>Weeks 1–4</td><td>Auth + basic ticket submit + assign</td><td>Keep GHL fully</td></tr>
+      <tr><td>Sprint 3–4</td><td>Weeks 5–8</td><td>Full ticket lifecycle + SLA + admin view</td><td>Keep GHL fully</td></tr>
+      <tr><td>Sprint 5–6</td><td>Weeks 9–12</td><td>Project milestones + client approvals</td><td>Sync via n8n bridge</td></tr>
+      <tr><td>Sprint 7–8</td><td>Month 4</td><td>Billing + reports + knowledge base</td><td>Sync via n8n bridge</td></tr>
+      <tr><td>Sprint 9+</td><td>Month 5–18</td><td>GHL feature migration (phased)</td><td>Progressive shutdown</td></tr>
+    </tbody>
+  </table>
+
+  <div class="doc-footer">
+    <span>Kazi Agency — Dashboard Architecture Plan v1.0</span>
+    <span>Prepared June 2026 &nbsp;|&nbsp; admin@kaziagency.com</span>
+    <span>Confidential — Internal Use Only</span>
+  </div>
+</div>
+
+</body>
+</html>
