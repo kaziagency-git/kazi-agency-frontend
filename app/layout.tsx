@@ -55,8 +55,10 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
     nocache: false,
-    'google': 'follow',
-    'googlebot': 'follow',
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 }
 

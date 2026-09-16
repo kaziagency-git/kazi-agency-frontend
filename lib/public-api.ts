@@ -1,4 +1,7 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api/v1';
+import 'server-only';
+
+import { connectDB } from './server/db';
+import * as jobService from './server/services/job.service';
 
 export interface PublicJob {
   _id: string;
@@ -15,24 +18,34 @@ export interface PublicJob {
   createdAt: string;
 }
 
+/**
+ * Mongoose documents → the exact JSON shape the HTTP API used to return
+ * (ObjectId to string, Date to ISO string), so callers are unaffected.
+ */
+function toPlain<T>(value: unknown): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+// These run only in server components, so they query the database in-process
+// rather than making an HTTP round-trip to a second deployment.
+
 export async function getPublishedJobs(): Promise<PublicJob[]> {
   try {
-    const res = await fetch(`${BASE}/jobs`, { next: { revalidate: 60 } });
-    if (!res.ok) return [];
-    const body = await res.json();
-    return (body.data ?? []) as PublicJob[];
-  } catch {
+    await connectDB();
+    return toPlain<PublicJob[]>(await jobService.getPublishedJobs());
+  } catch (err) {
+    console.error('[public-api] getPublishedJobs failed:', err);
     return [];
   }
 }
 
 export async function getPublishedJob(identifier: string): Promise<PublicJob | null> {
   try {
-    const res = await fetch(`${BASE}/jobs/${identifier}`, { next: { revalidate: 60 } });
-    if (!res.ok) return null;
-    const body = await res.json();
-    return (body.data ?? null) as PublicJob | null;
-  } catch {
+    await connectDB();
+    const job = await jobService.getJobByIdOrSlug(identifier);
+    return job ? toPlain<PublicJob>(job) : null;
+  } catch (err) {
+    console.error('[public-api] getPublishedJob failed:', err);
     return null;
   }
 }

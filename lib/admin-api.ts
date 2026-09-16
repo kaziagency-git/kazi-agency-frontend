@@ -1,6 +1,6 @@
 import { getToken, getRefreshToken, setTokens, clearTokens } from './admin-auth';
 
-const BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api/v1').replace(/\/$/, '');
+const BASE = (process.env.NEXT_PUBLIC_API_URL ?? '/api/v1').replace(/\/$/, '');
 
 // ── Types ──────────────────────────────────────────────────────────────────
 

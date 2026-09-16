@@ -5,7 +5,7 @@ import {
   clearClientTokens,
 } from './client-auth';
 
-const BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api/v1').replace(/\/$/, '');
+const BASE = (process.env.NEXT_PUBLIC_API_URL ?? '/api/v1').replace(/\/$/, '');
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -204,7 +204,7 @@ export const replyToTicket = (id: string, content: string, attachments: TicketAt
   });
 
 export async function uploadFiles(files: File[]): Promise<TicketAttachment[]> {
-  const BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api/v1').replace(/\/$/, '');
+  const BASE = (process.env.NEXT_PUBLIC_API_URL ?? '/api/v1').replace(/\/$/, '');
   const form = new FormData();
   files.forEach((f) => form.append('files', f));
   const res = await fetch(`${BASE}/upload`, { method: 'POST', body: form });
@@ -418,14 +418,14 @@ export const adminRegenerateOnboardingToken = (id: string) =>
 
 // Public (share link — no auth)
 export async function publicGetOnboardingForm(token: string): Promise<{ form: OnboardingForm }> {
-  const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api/v1';
+  const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1';
   const res = await fetch(`${BASE_URL}/pre-launch-form/${token}`);
   const data = await res.json();
   if (!res.ok) throw new Error(data.message ?? 'Not found');
   return data.data;
 }
 export async function publicUpdateOnboardingForm(token: string, formData: Partial<OnboardingFormData>): Promise<{ form: OnboardingForm }> {
-  const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api/v1';
+  const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1';
   const res = await fetch(`${BASE_URL}/pre-launch-form/${token}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
