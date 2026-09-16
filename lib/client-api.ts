@@ -296,6 +296,16 @@ export const changeClientPassword = (id: string, password: string) =>
     body: JSON.stringify({ password }),
   });
 
+export interface ClientStats {
+  pending: number;
+  active: number;
+  inactive: number;
+  total: number;
+}
+
+// Aggregate counts across all clients — not just the current page.
+export const getAdminClientStats = () => adminFetch<ClientStats>('/admin/clients/stats');
+
 // ── Admin: Service Projects ────────────────────────────────────────────────
 
 export const addServiceProject = (clientId: string, body: {

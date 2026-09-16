@@ -1,5 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { getAdminClients, AdminClient, ClientListParams, ClientListResponse } from '@/lib/client-api';
+import {
+  getAdminClients,
+  getAdminClientStats,
+  AdminClient,
+  ClientListParams,
+  ClientListResponse,
+  ClientStats,
+} from '@/lib/client-api';
 
 interface ClientsState {
   items: AdminClient[];
@@ -8,6 +15,8 @@ interface ClientsState {
   totalPages: number;
   status: 'idle' | 'loading' | 'success' | 'error';
   error: string | null;
+  stats: ClientStats | null;
+  statsStatus: 'idle' | 'loading' | 'success' | 'error';
 }
 
 const initialState: ClientsState = {
@@ -17,6 +26,8 @@ const initialState: ClientsState = {
   totalPages: 1,
   status: 'idle',
   error: null,
+  stats: null,
+  statsStatus: 'idle',
 };
 
 export const fetchClients = createAsyncThunk(
@@ -26,6 +37,17 @@ export const fetchClients = createAsyncThunk(
       return await getAdminClients(params);
     } catch (err) {
       return rejectWithValue(err instanceof Error ? err.message : 'Failed to load clients');
+    }
+  }
+);
+
+export const fetchClientStats = createAsyncThunk(
+  'clients/fetchStats',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await getAdminClientStats();
+    } catch (err) {
+      return rejectWithValue(err instanceof Error ? err.message : 'Failed to load client stats');
     }
   }
 );
@@ -59,6 +81,17 @@ const clientsSlice = createSlice({
       .addCase(fetchClients.rejected, (state, action) => {
         state.status = 'error';
         state.error = action.payload as string;
+      })
+
+      .addCase(fetchClientStats.pending, (state) => {
+        state.statsStatus = 'loading';
+      })
+      .addCase(fetchClientStats.fulfilled, (state, action) => {
+        state.statsStatus = 'success';
+        state.stats = action.payload;
+      })
+      .addCase(fetchClientStats.rejected, (state) => {
+        state.statsStatus = 'error';
       });
   },
 });

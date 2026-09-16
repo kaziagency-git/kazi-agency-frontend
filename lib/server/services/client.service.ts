@@ -131,6 +131,21 @@ export interface ClientListResult {
   totalPages: number;
 }
 
+/**
+ * Status counts across every client. Aggregated in the database rather than
+ * derived from a page of results, which would only ever count one page.
+ */
+export async function getClientStats(): Promise<Record<string, number>> {
+  const result = await Client.aggregate([
+    { $group: { _id: '$status', count: { $sum: 1 } } },
+  ]);
+
+  const stats: Record<string, number> = { pending: 0, active: 0, inactive: 0 };
+  for (const r of result) stats[r._id] = r.count;
+  stats.total = Object.values(stats).reduce((a, b) => a + b, 0);
+  return stats;
+}
+
 export async function getAllClients(query: ClientListQuery = {}): Promise<ClientListResult> {
   const { search, status, page = 1, limit = 20 } = query;
 
