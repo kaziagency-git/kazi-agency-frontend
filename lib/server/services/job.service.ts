@@ -9,10 +9,15 @@ export async function getPublishedJobs(): Promise<IJob[]> {
   return Job.find({ isPublished: true }).sort({ createdAt: -1 });
 }
 
+/**
+ * Public lookup by slug, or by id for links created before the URLs moved to
+ * slugs. Both branches require `isPublished` — an unpublished draft must not
+ * be reachable just because someone has its id.
+ */
 export async function getJobByIdOrSlug(identifier: string): Promise<IJob | null> {
   const isMongoId = /^[a-f\d]{24}$/i.test(identifier);
   return isMongoId
-    ? Job.findById(identifier)
+    ? Job.findOne({ _id: identifier, isPublished: true })
     : Job.findOne({ slug: identifier, isPublished: true });
 }
 
@@ -26,7 +31,14 @@ export async function createJob(data: CreateJobInput): Promise<IJob> {
 }
 
 export async function updateJob(id: string, data: UpdateJobInput): Promise<IJob | null> {
-  return Job.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+  const job = await Job.findById(id);
+  if (!job) return null;
+
+  Object.assign(job, data);
+
+  // save() rather than findByIdAndUpdate(): only save() runs the pre-save hook
+  // that regenerates the slug, so renaming a job also updates its public URL.
+  return job.save();
 }
 
 export async function togglePublish(id: string, isPublished: boolean): Promise<IJob | null> {

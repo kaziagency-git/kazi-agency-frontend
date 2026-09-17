@@ -48,6 +48,9 @@ function verifyBearer(req: Request): TokenClaims {
 
 export function requireAdmin(req: Request): AdminPayload {
   const claims = verifyBearer(req);
+  // A client portal token is a valid signature too — without this check any
+  // logged-in client could call every /admin endpoint.
+  if (claims.role !== 'admin') throw new HttpError('Access denied', 403);
   return { id: claims.id, email: claims.email, role: 'admin' };
 }
 

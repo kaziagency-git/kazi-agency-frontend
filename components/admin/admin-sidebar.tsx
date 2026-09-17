@@ -7,7 +7,7 @@ import { useAppDispatch } from '@/store/hooks';
 import { logoutThunk } from '@/store/slices/authSlice';
 import {
   LayoutDashboard, Briefcase, Users, LogOut, ChevronRight, X,
-  Users2, TicketCheck, ClipboardList,
+  Users2, TicketCheck, ClipboardList, Wallet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -25,6 +25,12 @@ const navGroups = [
       { href: '/admin/clients', label: 'Clients', icon: Users2, exact: false },
       { href: '/admin/tickets', label: 'Support Tickets', icon: TicketCheck, exact: false },
       { href: '/admin/pre-launch-form', label: 'Pre-Launch Form', icon: ClipboardList, exact: false },
+    ],
+  },
+  {
+    label: 'Finance',
+    items: [
+      { href: '/admin/accounting', label: 'Accounting', icon: Wallet, exact: false },
     ],
   },
   {

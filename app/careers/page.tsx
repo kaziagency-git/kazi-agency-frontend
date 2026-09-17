@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   alternates: { canonical: '/careers' },
 };
 
+// Without this the page is prerendered once at build time and a job published
+// afterwards never appears. Publishing also calls revalidatePath('/careers'),
+// so this is the fallback for edits that bypass the admin API.
+export const revalidate = 60;
+
 const levelColors: Record<string, string> = {
   'Entry-Level': 'bg-emerald-50 text-emerald-700 border border-emerald-200',
   'Mid-Level':   'bg-blue-50 text-blue-700 border border-blue-200',
@@ -88,7 +93,7 @@ export default async function CareersPage() {
           ) : (
             <div className="space-y-4">
               {jobs.map((job) => (
-                <Link key={job._id} href={`/careers/${job._id}`} className="group block">
+                <Link key={job._id} href={`/careers/${job.slug}`} className="group block">
                   <div className="rounded-2xl border border-slate-200 bg-white p-6 md:p-7 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 transition-all duration-200">
                     <div className="flex flex-col sm:flex-row sm:items-start gap-4">
                       {/* Info */}

@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { ok, fail, route, jsonBody } from '@/lib/server/http';
 import { requireAdmin } from '@/lib/server/auth';
 import { updateJobSchema } from '@/lib/server/schemas/job.schema';
@@ -22,6 +23,10 @@ export const PUT = route<Ctx>(async (req, { params }) => {
   const body = updateJobSchema.parse(await jsonBody(req));
   const job = await jobService.updateJob(id, body);
   if (!job) return fail('Job not found', 404);
+
+  // A title edit changes the slug, so the listing has to be rebuilt.
+  revalidatePath('/careers');
+
   return ok('Job updated', job);
 });
 
@@ -30,5 +35,8 @@ export const DELETE = route<Ctx>(async (req, { params }) => {
   const { id } = await params;
   const job = await jobService.deleteJob(id);
   if (!job) return fail('Job not found', 404);
+
+  revalidatePath('/careers');
+
   return ok('Job deleted');
 });

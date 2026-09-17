@@ -5,6 +5,7 @@ import applicationsReducer from './slices/applicationsSlice';
 import clientAuthReducer from './slices/clientAuthSlice';
 import clientsReducer from './slices/clientsSlice';
 import ticketsReducer from './slices/ticketsSlice';
+import accountingReducer from './slices/accounting';
 
 export const makeStore = () =>
   configureStore({
@@ -15,6 +16,7 @@ export const makeStore = () =>
       clientAuth: clientAuthReducer,
       clients: clientsReducer,
       tickets: ticketsReducer,
+      accounting: accountingReducer,
     },
   });
 

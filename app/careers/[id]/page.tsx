@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: `${job.title} | Kazi Agency Careers`,
     description: job.description,
-    alternates: { canonical: `/careers/${job._id}` },
+    alternates: { canonical: `/careers/${job.slug}` },
     openGraph: {
       title: `${job.title} | Kazi Agency Careers`,
       description: job.description,
@@ -50,6 +50,10 @@ export default async function JobDetailsPage({ params }: { params: Promise<{ id:
   ]);
 
   if (!job) notFound();
+
+  // Job URLs are the title slug. Anything still pointing at the old
+  // /careers/<mongo id> form — saved links, search results — moves across.
+  if (id !== job.slug) redirect(`/careers/${job.slug}`);
 
   const otherJobs = allJobs.filter((j) => j._id !== job._id).slice(0, 4);
 
@@ -191,7 +195,7 @@ export default async function JobDetailsPage({ params }: { params: Promise<{ id:
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {otherJobs.map((other) => (
-                <Link key={other._id} href={`/careers/${other._id}`} className="group block">
+                <Link key={other._id} href={`/careers/${other.slug}`} className="group block">
                   <div className="rounded-xl border border-slate-200 bg-white p-5 hover:border-primary/40 hover:shadow-md transition-all">
                     <h3 className="text-base font-bold text-slate-900 group-hover:text-primary transition-colors mb-1">
                       {other.title}

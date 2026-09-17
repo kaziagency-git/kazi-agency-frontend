@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { ok, route, jsonBody } from '@/lib/server/http';
 import { requireAdmin } from '@/lib/server/auth';
 import { createJobSchema } from '@/lib/server/schemas/job.schema';
@@ -16,5 +17,8 @@ export const POST = route(async (req) => {
   requireAdmin(req);
   const body = createJobSchema.parse(await jsonBody(req));
   const job = await jobService.createJob(body);
+
+  if (job.isPublished) revalidatePath('/careers');
+
   return ok('Job created', job, 201);
 });
