@@ -26,6 +26,7 @@ export function RichTextEditor({ value, onChange, placeholder, className, disabl
       }),
     ],
     content: value || '',
+    immediatelyRender: false,
     editable: !disabled,
     onUpdate({ editor }) {
       const html = editor.isEmpty ? '' : editor.getHTML();

@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import { getPublishedJob, getPublishedJobs } from '@/lib/public-api';
 import { JobApplicationForm } from '@/components/job-application-form';
 import { MapPin, Briefcase, ArrowLeft, Check, ArrowRight } from 'lucide-react';
+import { richTextToHtml, richTextToPlain } from '@/lib/utils';
 
 const levelColors: Record<string, string> = {
   'Entry-Level': 'bg-emerald-50 text-emerald-700 border border-emerald-200',
@@ -29,15 +30,17 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   return {
     title: `${job.title} | Kazi Agency Careers`,
-    description: job.description,
+    description: metaDescription(job.description),
     alternates: { canonical: `/careers/${job.slug}` },
     openGraph: {
       title: `${job.title} | Kazi Agency Careers`,
-      description: job.description,
+      description: metaDescription(job.description),
       type: 'website',
     },
   };
 }
+
+const metaDescription = (value: string) => richTextToPlain(value).slice(0, 200);
 
 export default async function JobDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -112,7 +115,10 @@ export default async function JobDetailsPage({ params }: { params: Promise<{ id:
               {/* About the role */}
               <div>
                 <h2 className="text-xl font-bold text-slate-900 mb-4">About the Role</h2>
-                <p className="text-slate-600 leading-relaxed text-base">{job.description}</p>
+                <div
+                  className="prose prose-slate max-w-none text-base leading-relaxed text-slate-600 prose-headings:text-slate-900 prose-strong:text-slate-900 prose-a:text-primary"
+                  dangerouslySetInnerHTML={{ __html: richTextToHtml(job.description) }}
+                />
               </div>
 
               {job.responsibilities.length > 0 && (

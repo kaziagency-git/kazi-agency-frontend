@@ -7,7 +7,7 @@ import { Plus, X, Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createJob, updateJob, type Job, type JobInput } from '@/lib/admin-api';
+import { richTextToPlain } from '@/lib/utils';
 
 interface JobFormProps {
   initialData?: Job;
@@ -99,7 +100,7 @@ export function JobForm({ initialData, mode }: JobFormProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title || !department || !location || !level || !type || !description) {
+    if (!title || !department || !location || !level || !type || !richTextToPlain(description)) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -228,16 +229,13 @@ export function JobForm({ initialData, mode }: JobFormProps) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="description">
+            <Label>
               Description <span className="text-destructive">*</span>
             </Label>
-            <Textarea
-              id="description"
+            <RichTextEditor
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={setDescription}
               placeholder="Brief overview of the role and what the candidate will do..."
-              rows={4}
-              required
             />
           </div>
         </CardContent>

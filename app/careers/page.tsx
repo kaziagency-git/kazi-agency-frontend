@@ -5,6 +5,7 @@ import { SchemaInjector } from '@/components/schema-injector';
 import { careersFAQ } from '@/lib/faq-data';
 import { getPublishedJobs } from '@/lib/public-api';
 import { MapPin, Briefcase, ArrowRight, Zap } from 'lucide-react';
+import { richTextToPlain } from '@/lib/utils';
 
 export const metadata: Metadata = {
   alternates: { canonical: '/careers' },
@@ -130,7 +131,7 @@ export default async function CareersPage() {
                       </div>
                     </div>
 
-                    <p className="text-sm text-slate-500 mt-4 line-clamp-2 leading-relaxed">{job.description}</p>
+                    <p className="text-sm text-slate-500 mt-4 line-clamp-2 leading-relaxed">{richTextToPlain(job.description)}</p>
                   </div>
                 </Link>
               ))}
