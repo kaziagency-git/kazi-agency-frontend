@@ -203,7 +203,7 @@ export const subscriptionsResource: AccResourceConfig = {
   sortable: ['nextBillingDate', 'toolName', 'costCents', 'createdAt', 'updatedAt'],
   objectIdFilters: ['clientId', 'accountId'],
   stringFilters: ['status', 'billingCycle'],
-  booleanFilters: ['isBillableToClient', 'isArchived'],
+  booleanFilters: ['isBillableToClient', 'autoRenew', 'isArchived'],
   searchable: ['toolName', 'plan', 'notes'],
   softDelete: { field: 'isArchived', value: true },
   populate: [CLIENT_POPULATE, { path: 'accountId', select: 'name type last4' }],

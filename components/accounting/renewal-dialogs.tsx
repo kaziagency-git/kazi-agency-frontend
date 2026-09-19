@@ -427,6 +427,9 @@ export function SubscriptionDialog({
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(() => blankSubscription());
 
+  // A one_time purchase has neither a next billing date nor a renewal to automate.
+  const isOneTime = form.billingCycle === 'one_time';
+
   useEffect(() => {
     if (!open) return;
     setForm(editing ? {
@@ -435,6 +438,9 @@ export function SubscriptionDialog({
       costCents: editing.costCents,
       billingCycle: editing.billingCycle,
       nextBillingDate: editing.nextBillingDate ? toYmdNY(new Date(editing.nextBillingDate)) : '',
+      // A row written before the field existed has none; the model defaults
+      // it to true, so only an explicit false means manual renewal.
+      autoRenew: editing.autoRenew !== false,
       accountId: refId(editing.accountId),
       isBillableToClient: editing.isBillableToClient,
       clientId: refId(editing.clientId),
@@ -459,7 +465,9 @@ export function SubscriptionDialog({
         plan: form.plan.trim(),
         costCents: form.costCents,
         billingCycle: form.billingCycle,
-        nextBillingDate: form.nextBillingDate || null,
+        nextBillingDate: isOneTime ? null : form.nextBillingDate || null,
+        // A one_time purchase never renews, so the flag is forced off.
+        autoRenew: isOneTime ? false : form.autoRenew,
         accountId: form.accountId,
         isBillableToClient: form.isBillableToClient,
         clientId: form.isBillableToClient ? form.clientId : null,
@@ -531,7 +539,7 @@ export function SubscriptionDialog({
                 type="date"
                 value={form.nextBillingDate}
                 onChange={(e) => setForm((p) => ({ ...p, nextBillingDate: e.target.value }))}
-                disabled={form.billingCycle === 'one_time'}
+                disabled={isOneTime}
               />
             </div>
             <div className="space-y-1.5">
@@ -549,6 +557,23 @@ export function SubscriptionDialog({
             <Label htmlFor="s-account">Paid from</Label>
             <AccountSelect id="s-account" value={form.accountId} onChange={(v) => setForm((p) => ({ ...p, accountId: v }))} />
           </div>
+
+          <div className="flex items-center gap-2">
+            <Switch
+              id="s-autorenew"
+              checked={form.autoRenew && !isOneTime}
+              disabled={isOneTime}
+              onCheckedChange={(v) => setForm((p) => ({ ...p, autoRenew: v }))}
+            />
+            <Label htmlFor="s-autorenew" className={`cursor-pointer ${isOneTime ? 'text-muted-foreground' : ''}`}>
+              Auto-renew
+            </Label>
+          </div>
+          <p className="text-xs text-muted-foreground -mt-2">
+            {isOneTime
+              ? 'A one-time purchase never renews.'
+              : 'Turn this off when the tool has to be paid for by hand before the billing date.'}
+          </p>
 
           <div className="flex items-center gap-2">
             <Switch
@@ -602,6 +627,7 @@ function blankSubscription() {
     costCents: 0,
     billingCycle: 'monthly' as AccBillingCycle,
     nextBillingDate: '',
+    autoRenew: true,
     accountId: null as string | null,
     isBillableToClient: false,
     clientId: null as string | null,

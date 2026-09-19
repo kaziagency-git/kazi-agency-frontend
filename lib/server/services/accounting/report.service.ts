@@ -360,7 +360,8 @@ export async function getUpcomingReport(days: number): Promise<UpcomingReport> {
         daysRemaining: daysUntil(s.nextBillingDate as Date, now),
         costCents: s.costCents,
         chargeCents: 0,
-        autoRenew: null,
+        // A one_time purchase never renews, so the flag says nothing about it.
+        autoRenew: s.billingCycle === 'one_time' ? null : s.autoRenew,
       };
     }),
     overdueInvoices: invoices.map((inv) => {

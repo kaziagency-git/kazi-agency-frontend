@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { isValidObjectId } from 'mongoose';
+import { parseBoundary } from '@/lib/accounting/date';
 
 /** A Mongo ObjectId in string form. */
 export const objectIdSchema = z
@@ -18,8 +19,24 @@ export const centsSchema = z
 export const positiveCentsSchema = centsSchema.min(1, 'Must be greater than zero');
 export const nonNegativeCentsSchema = centsSchema.min(0, 'Cannot be negative');
 
-/** Accepts an ISO string or a Date and yields a Date. */
-export const dateSchema = z.coerce.date();
+/**
+ * Accepts an ISO string or a Date and yields a Date.
+ *
+ * A bare `YYYY-MM-DD` — what every `<input type="date">` in the dashboard sends
+ * — means that calendar day in the agency's timezone, so it is read as midnight
+ * in New York rather than midnight UTC. Stored as UTC midnight it would render
+ * as the PREVIOUS day everywhere the books are read (`toYmdNY`, `formatDateNY`),
+ * and every edit would round-trip another day off the date.
+ */
+export const dateSchema = z.preprocess((value) => {
+  if (typeof value !== 'string') return value;
+  try {
+    return parseBoundary(value);
+  } catch {
+    // Leave it be so `z.coerce.date()` reports a validation error, not a throw.
+    return value;
+  }
+}, z.coerce.date());
 
 /** Shared list-query parameters. Values arrive as strings from the URL. */
 export const listQuerySchema = z.object({

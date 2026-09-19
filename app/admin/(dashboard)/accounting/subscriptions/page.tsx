@@ -232,6 +232,21 @@ export default function AccountingSubscriptionsPage() {
                           {s.loginEmail && (
                             <span className="block text-xs text-muted-foreground mt-0.5">{s.loginEmail}</span>
                           )}
+                          {s.billingCycle !== 'one_time' && (
+                            <Badge
+                              variant="secondary"
+                              className={
+                                // A row written before the field existed has no
+                                // `autoRenew` at all; the model defaults it to
+                                // true, so only an explicit false is manual.
+                                s.autoRenew === false
+                                  ? 'mt-1 text-[10px] bg-amber-100 text-amber-700'
+                                  : 'mt-1 text-[10px] bg-emerald-100 text-emerald-700'
+                              }
+                            >
+                              {s.autoRenew === false ? 'Manual renew' : 'Auto-renew'}
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell className="hidden lg:table-cell">
                           <Badge variant="secondary" className="capitalize text-xs">

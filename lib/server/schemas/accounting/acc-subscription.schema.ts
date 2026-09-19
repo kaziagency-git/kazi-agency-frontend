@@ -8,6 +8,7 @@ export const createAccSubscriptionSchema = z.object({
   costCents: nonNegativeCentsSchema,
   billingCycle: z.enum(ACC_BILLING_CYCLES).optional(),
   nextBillingDate: dateSchema.nullable().optional(),
+  autoRenew: z.boolean().optional(),
   accountId: objectIdSchema.nullable().optional(),
   isBillableToClient: z.boolean().optional(),
   clientId: objectIdSchema.nullable().optional(),

@@ -166,6 +166,7 @@ export interface AccSubscription {
   costCents: number;
   billingCycle: AccBillingCycle;
   nextBillingDate: string | null;
+  autoRenew: boolean;
   accountId: { _id: string; name: string } | string | null;
   isBillableToClient: boolean;
   clientId: ClientRef;
@@ -439,6 +440,7 @@ export interface AccSubscriptionInput {
   costCents: number;
   billingCycle?: AccBillingCycle;
   nextBillingDate?: string | null;
+  autoRenew?: boolean;
   accountId?: string | null;
   isBillableToClient?: boolean;
   clientId?: string | null;

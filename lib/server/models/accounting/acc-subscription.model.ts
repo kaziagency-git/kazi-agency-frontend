@@ -19,6 +19,7 @@ export interface IAccSubscription extends Document {
   costCents: number;
   billingCycle: AccBillingCycle;
   nextBillingDate: Date | null;
+  autoRenew: boolean;
   accountId: Types.ObjectId | null;
   isBillableToClient: boolean;
   clientId: Types.ObjectId | null;
@@ -44,6 +45,8 @@ const accSubscriptionSchema = new Schema<IAccSubscription>(
     },
     // Null for a one_time purchase that will not renew.
     nextBillingDate: { type: Date, default: null, index: true },
+    // False when the tool has to be renewed by hand before nextBillingDate.
+    autoRenew: { type: Boolean, default: true, index: true },
     accountId: { type: Schema.Types.ObjectId, ref: 'AccAccount', default: null },
     isBillableToClient: { type: Boolean, default: false },
     clientId: { type: Schema.Types.ObjectId, ref: 'Client', default: null, index: true },
