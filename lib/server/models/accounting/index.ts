@@ -21,6 +21,7 @@ export { AccDomain, type IAccDomain } from './acc-domain.model';
 export { AccHosting, type IAccHosting } from './acc-hosting.model';
 export { AccInvoice, type IAccInvoice } from './acc-invoice.model';
 export { AccNotificationLog, type IAccNotificationLog } from './acc-notification-log.model';
+export { AccSettings, type IAccSettings, ACC_SETTINGS_ID } from './acc-settings.model';
 export { AccSubscription, type IAccSubscription } from './acc-subscription.model';
 export { AccTimeLog, type IAccTimeLog } from './acc-time-log.model';
 export { AccTransaction, type IAccTransaction } from './acc-transaction.model';

@@ -470,6 +470,23 @@ export const reportsApi = {
   subscriptionTotals: () => accFetch<SubscriptionTotalsReport>('/reports/subscriptions-total'),
 };
 
+export interface AccAlertSettings {
+  domainAlertDays: number[];
+  hostingAlertDays: number[];
+  subscriptionAlertDays: number[];
+  invoiceOverdueAlertDays: number[];
+  timezone: string;
+  updatedAt: string | null;
+}
+
+export type AccAlertSettingsInput = Partial<Omit<AccAlertSettings, 'updatedAt'>>;
+
+export const alertSettingsApi = {
+  get: () => accFetch<AccAlertSettings>('/settings/alerts'),
+  update: (body: AccAlertSettingsInput) =>
+    accFetch<AccAlertSettings>('/settings/alerts', { method: 'PUT', body: JSON.stringify(body) }),
+};
+
 export const seedApi = {
   run: () =>
     accFetch<{ created: string[]; existing: string[] }>('/seed', { method: 'POST' }),

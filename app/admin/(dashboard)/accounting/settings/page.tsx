@@ -20,6 +20,7 @@ import {
 } from '@/components/accounting/acc-ui';
 import { EnumSelect } from '@/components/accounting/entity-select';
 import { ConfirmDialog } from '@/components/accounting/confirm-dialog';
+import { AlertSettingsPanel } from '@/components/accounting/alert-settings-panel';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchAccAccounts, fetchAccCategories, fetchAccReference } from '@/store/slices/accounting';
 import {
@@ -47,7 +48,7 @@ export default function AccountingSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Accounting Settings" description="Categories and payment accounts">
+      <PageHeader title="Accounting Settings" description="Categories, payment accounts and alert days">
         <Button variant="outline" size="sm" onClick={refresh}>
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
@@ -58,6 +59,7 @@ export default function AccountingSettingsPage() {
         <TabsList>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="accounts">Payment accounts</TabsTrigger>
+          <TabsTrigger value="alerts">Alerts</TabsTrigger>
         </TabsList>
 
         <TabsContent value="categories" className="mt-5">
@@ -66,6 +68,10 @@ export default function AccountingSettingsPage() {
 
         <TabsContent value="accounts" className="mt-5">
           <AccountsPanel onChanged={refresh} />
+        </TabsContent>
+
+        <TabsContent value="alerts" className="mt-5">
+          <AlertSettingsPanel />
         </TabsContent>
       </Tabs>
     </div>

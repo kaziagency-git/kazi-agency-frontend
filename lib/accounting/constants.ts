@@ -72,19 +72,36 @@ export type AccNotificationRefCollection = (typeof ACC_NOTIFICATION_REF_COLLECTI
 
 // ── Alert thresholds ───────────────────────────────────────────────────────
 
-/** Days before expiry at which a domain/hosting renewal alert fires. */
-export const ACC_EXPIRY_ALERT_DAYS = [30, 15, 7] as const;
+/**
+ * FALLBACKS ONLY. The live thresholds live in the `acc_settings` singleton and
+ * are read through `getAlertSettings()` (lib/accounting/settings.ts). Nothing
+ * else may read these directly — they exist so a missing or corrupt settings
+ * field still has something sane to fall back to, field by field.
+ */
+export const ACC_DEFAULT_DOMAIN_ALERT_DAYS = [30, 15, 7] as const;
+export const ACC_DEFAULT_HOSTING_ALERT_DAYS = [30, 15, 7] as const;
+export const ACC_DEFAULT_SUBSCRIPTION_ALERT_DAYS = [15, 7, 3, 1] as const;
+export const ACC_DEFAULT_INVOICE_OVERDUE_ALERT_DAYS = [1, 3, 7] as const;
 
-/** Days before `nextBillingDate` at which a subscription reminder fires. */
-export const ACC_SUBSCRIPTION_REMINDER_DAYS = 5 as const;
+/** Zone the day-countdown maths runs in when the setting is missing. */
+export const ACC_DEFAULT_ALERT_TIMEZONE = ACC_DISPLAY_TIMEZONE;
 
-/** Builds the notification `type` key that keeps alerts de-duplicated. */
-export function accExpiryAlertType(kind: 'domain' | 'hosting', days: number): string {
-  return `${kind}_expiry_${days}`;
+/** The four independently configurable alert kinds. */
+export const ACC_ALERT_KINDS = ['domain', 'hosting', 'subscription', 'invoice'] as const;
+export type AccAlertKind = (typeof ACC_ALERT_KINDS)[number];
+
+/**
+ * Builds the `acc_notification_logs.type` key that de-duplicates alerts.
+ *
+ * `threshold` is the configured day that fired; 0 means the item is already
+ * past its date. The caller appends the cycle date (`domain_15@2027-05-14`)
+ * because domains renew yearly and subscriptions monthly — a bare
+ * `domain_15` would be logged once and then suppress every future renewal of
+ * that same record.
+ */
+export function accAlertType(kind: AccAlertKind, threshold: number): string {
+  return threshold > 0 ? `${kind}_${threshold}` : `${kind}_expired`;
 }
-
-export const ACC_NOTIFICATION_TYPE_SUBSCRIPTION_RENEWAL = 'subscription_renewal' as const;
-export const ACC_NOTIFICATION_TYPE_INVOICE_OVERDUE = 'invoice_overdue' as const;
 
 // ── Seed data ──────────────────────────────────────────────────────────────
 

@@ -11,15 +11,13 @@ import {
   AccTransaction,
 } from '../../models/accounting';
 import {
-  ACC_EXPIRY_ALERT_DAYS,
-  ACC_NOTIFICATION_TYPE_INVOICE_OVERDUE,
-  ACC_NOTIFICATION_TYPE_SUBSCRIPTION_RENEWAL,
-  ACC_SUBSCRIPTION_REMINDER_DAYS,
+  AccAlertKind,
   AccNotificationChannel,
   AccNotificationRefCollection,
-  accExpiryAlertType,
+  accAlertType,
 } from '@/lib/accounting/constants';
-import { addDays, daysUntil, toYmdNY } from '@/lib/accounting/date';
+import { addDays, daysUntil, daysUntilInZone, toYmdNY } from '@/lib/accounting/date';
+import { getAlertSettings } from '@/lib/accounting/settings';
 import { toCents } from '@/lib/accounting/money';
 import { isDuplicateKeyError } from '@/lib/accounting/api-route';
 import { HttpError } from '@/lib/server/http';
@@ -246,37 +244,73 @@ async function resolveClientId(
 export interface DueAlert {
   /** Value to store in `acc_notification_logs.type` — includes the cycle date. */
   type: string;
-  /** Base alert name for message templating, e.g. `domain_expiry_30`. */
+  /** Base alert name for message templating, e.g. `domain_15` or `domain_expired`. */
   baseType: string;
+  /** Which of the four configurable kinds this row came from. */
+  itemType: AccAlertKind;
   refCollection: AccNotificationRefCollection;
   refId: string;
+  /** Id of the underlying record — same value as `refId`. */
+  id: string;
   channel: AccNotificationChannel;
   label: string;
+  /** Human name of the item: the tool, domain, plan or invoice number. */
+  name: string;
   clientName: string | null;
   date: string;
   daysRemaining: number;
+  /** Whole days left in the configured zone; negative once the date has passed. */
+  daysLeft: number;
+  /** The configured day that fired, or 0 for the expired/overdue alert. */
+  threshold: number;
   amountCents: number;
+  /** Cost of the item in cents — same value as `amountCents`. */
+  costCents: number;
 }
 
 /**
  * Alerts that should go out now and have not been logged yet.
  *
- * The dedupe key carries the cycle date (`domain_expiry_30@2027-05-14`)
- * because domains renew yearly and subscriptions monthly — a bare
- * `domain_expiry_30` would be logged once and then suppress every future
- * renewal for that same record.
+ * Thresholds come from `acc_settings` via `getAlertSettings()`, never from
+ * constants, and firing is an EXACT match: with `[15, 7, 3, 1]` a subscription
+ * alerts on the day it is 15, 7, 3 and 1 days out, and on no other day.
+ * `daysLeft` counts whole calendar days in the configured zone, so the hour the
+ * workflow runs does not matter — but the workflow does have to run every day
+ * or a threshold is simply missed.
+ *
+ * On top of the configured days, anything already at or past its date raises a
+ * single `*_expired` alert. Invoice days count FORWARD from the due date, so
+ * for those the expired alert is the due date itself and `[1, 3, 7]` fires on
+ * the first, third and seventh day after it.
+ *
+ * The dedupe key carries the cycle date (`domain_15@2027-05-14`) because
+ * domains renew yearly and subscriptions monthly — a bare `domain_15` would be
+ * logged once and then suppress every future renewal for that same record.
  */
 export async function getDueAlerts(channel: AccNotificationChannel): Promise<DueAlert[]> {
+  const settings = await getAlertSettings();
+  const { timezone } = settings;
   const now = new Date();
-  const widest = Math.max(...ACC_EXPIRY_ALERT_DAYS);
-  const expiryHorizon = addDays(widest, now);
-  const subscriptionHorizon = addDays(ACC_SUBSCRIPTION_REMINDER_DAYS, now);
+
+  // The widest configured day per kind decides how far ahead to look. Items
+  // already past their date are in range too, hence the open lower bound.
+  const domainHorizon = addDays(Math.max(...settings.domainAlertDays), now);
+  const hostingHorizon = addDays(Math.max(...settings.hostingAlertDays), now);
+  const subscriptionHorizon = addDays(Math.max(...settings.subscriptionAlertDays), now);
 
   const [domains, hostings, subscriptions, invoices] = await Promise.all([
-    AccDomain.find({ isArchived: { $ne: true }, status: 'active', expiryDate: { $lte: expiryHorizon } })
+    AccDomain.find({
+      isArchived: { $ne: true },
+      status: 'active',
+      expiryDate: { $lte: domainHorizon },
+    })
       .populate('clientId', 'name')
       .lean(),
-    AccHosting.find({ isArchived: { $ne: true }, status: 'active', expiryDate: { $lte: expiryHorizon } })
+    AccHosting.find({
+      isArchived: { $ne: true },
+      status: 'active',
+      expiryDate: { $lte: hostingHorizon },
+    })
       .populate('clientId', 'name')
       .lean(),
     AccSubscription.find({
@@ -286,7 +320,9 @@ export async function getDueAlerts(channel: AccNotificationChannel): Promise<Due
     })
       .populate('clientId', 'name')
       .lean(),
-    AccInvoice.find({ status: { $in: ['sent', 'overdue'] }, dueDate: { $ne: null, $lt: now } })
+    // Invoice days count forward from the due date, so only invoices that have
+    // already come due can alert at all.
+    AccInvoice.find({ status: { $in: ['sent', 'overdue'] }, dueDate: { $ne: null, $lte: now } })
       .populate('clientId', 'name')
       .lean(),
   ]);
@@ -294,66 +330,65 @@ export async function getDueAlerts(channel: AccNotificationChannel): Promise<Due
   const candidates: DueAlert[] = [];
 
   for (const domain of domains) {
-    const alert = expiryAlert('domain', domain.expiryDate, now);
-    if (!alert) continue;
-    candidates.push({
-      ...alert,
-      refCollection: 'acc_domains',
-      refId: domain._id.toString(),
-      channel,
-      label: domain.domain,
-      clientName: nameOf(domain.clientId),
-      date: domain.expiryDate.toISOString(),
-      amountCents: domain.costCents,
-    });
+    const hit = matchBeforeThreshold(domain.expiryDate, settings.domainAlertDays, timezone, now);
+    if (!hit) continue;
+    candidates.push(
+      buildDueAlert('domain', hit, {
+        refCollection: 'acc_domains',
+        refId: domain._id.toString(),
+        channel,
+        name: domain.domain,
+        clientName: nameOf(domain.clientId),
+        costCents: domain.costCents,
+      })
+    );
   }
 
   for (const hosting of hostings) {
-    const alert = expiryAlert('hosting', hosting.expiryDate, now);
-    if (!alert) continue;
-    candidates.push({
-      ...alert,
-      refCollection: 'acc_hostings',
-      refId: hosting._id.toString(),
-      channel,
-      label: hosting.name,
-      clientName: nameOf(hosting.clientId),
-      date: hosting.expiryDate.toISOString(),
-      amountCents: hosting.costCents,
-    });
+    const hit = matchBeforeThreshold(hosting.expiryDate, settings.hostingAlertDays, timezone, now);
+    if (!hit) continue;
+    candidates.push(
+      buildDueAlert('hosting', hit, {
+        refCollection: 'acc_hostings',
+        refId: hosting._id.toString(),
+        channel,
+        name: hosting.name,
+        clientName: nameOf(hosting.clientId),
+        costCents: hosting.costCents,
+      })
+    );
   }
 
   for (const sub of subscriptions) {
     const due = sub.nextBillingDate as Date;
-    candidates.push({
-      type: `${ACC_NOTIFICATION_TYPE_SUBSCRIPTION_RENEWAL}@${toYmdNY(due)}`,
-      baseType: ACC_NOTIFICATION_TYPE_SUBSCRIPTION_RENEWAL,
-      refCollection: 'acc_subscriptions',
-      refId: sub._id.toString(),
-      channel,
-      label: sub.toolName,
-      clientName: nameOf(sub.clientId),
-      date: due.toISOString(),
-      daysRemaining: daysUntil(due, now),
-      amountCents: sub.costCents,
-    });
+    const hit = matchBeforeThreshold(due, settings.subscriptionAlertDays, timezone, now);
+    if (!hit) continue;
+    candidates.push(
+      buildDueAlert('subscription', hit, {
+        refCollection: 'acc_subscriptions',
+        refId: sub._id.toString(),
+        channel,
+        name: sub.toolName,
+        clientName: nameOf(sub.clientId),
+        costCents: sub.costCents,
+      })
+    );
   }
 
   for (const invoice of invoices) {
     const due = invoice.dueDate as Date;
-    candidates.push({
-      // An invoice comes due once, so no cycle suffix is needed here.
-      type: ACC_NOTIFICATION_TYPE_INVOICE_OVERDUE,
-      baseType: ACC_NOTIFICATION_TYPE_INVOICE_OVERDUE,
-      refCollection: 'acc_invoices',
-      refId: invoice._id.toString(),
-      channel,
-      label: invoice.invoiceNumber,
-      clientName: nameOf(invoice.clientId),
-      date: due.toISOString(),
-      daysRemaining: daysUntil(due, now),
-      amountCents: invoice.amountCents,
-    });
+    const hit = matchOverdueThreshold(due, settings.invoiceOverdueAlertDays, timezone, now);
+    if (!hit) continue;
+    candidates.push(
+      buildDueAlert('invoice', hit, {
+        refCollection: 'acc_invoices',
+        refId: invoice._id.toString(),
+        channel,
+        name: invoice.invoiceNumber,
+        clientName: nameOf(invoice.clientId),
+        costCents: invoice.amountCents,
+      })
+    );
   }
 
   if (candidates.length === 0) return [];
@@ -370,27 +405,86 @@ export async function getDueAlerts(channel: AccNotificationChannel): Promise<Due
 
   return candidates
     .filter((c) => !sentKeys.has(`${c.type}|${c.refId}`))
-    .sort((a, b) => a.daysRemaining - b.daysRemaining);
+    .sort((a, b) => a.daysLeft - b.daysLeft);
+}
+
+interface ThresholdHit {
+  daysLeft: number;
+  threshold: number;
+  date: Date;
 }
 
 /**
- * Picks the most urgent threshold the item has crossed: at 20 days left the
- * 30-day alert applies, at 12 the 15-day one, at 5 (or already expired) the
- * 7-day one.
+ * Days configured BEFORE the date — domains, hosting and subscriptions.
+ * Exact match only, plus one alert once the date has arrived or passed.
  */
-function expiryAlert(
-  kind: 'domain' | 'hosting',
-  expiryDate: Date,
+function matchBeforeThreshold(
+  date: Date,
+  configured: readonly number[],
+  timezone: string,
   now: Date
-): { type: string; baseType: string; daysRemaining: number } | null {
-  const daysRemaining = daysUntil(expiryDate, now);
-  const crossed = ACC_EXPIRY_ALERT_DAYS.filter((d) => daysRemaining <= d);
-  if (crossed.length === 0) return null;
+): ThresholdHit | null {
+  const daysLeft = daysUntilInZone(date, timezone, now);
+  if (daysLeft <= 0) return { daysLeft, threshold: 0, date };
+  return configured.includes(daysLeft) ? { daysLeft, threshold: daysLeft, date } : null;
+}
 
-  const threshold = Math.min(...crossed);
-  const baseType = accExpiryAlertType(kind, threshold);
+/**
+ * Days configured AFTER the due date — overdue invoices. `[1, 3, 7]` fires on
+ * the first, third and seventh day past due; the due date itself is day 0 and
+ * raises the expired alert.
+ */
+function matchOverdueThreshold(
+  dueDate: Date,
+  configured: readonly number[],
+  timezone: string,
+  now: Date
+): ThresholdHit | null {
+  const daysLeft = daysUntilInZone(dueDate, timezone, now);
+  if (daysLeft > 0) return null;
 
-  return { type: `${baseType}@${toYmdNY(expiryDate)}`, baseType, daysRemaining };
+  const daysOverdue = -daysLeft;
+  if (daysOverdue === 0) return { daysLeft, threshold: 0, date: dueDate };
+
+  return configured.includes(daysOverdue)
+    ? { daysLeft, threshold: daysOverdue, date: dueDate }
+    : null;
+}
+
+function buildDueAlert(
+  itemType: AccAlertKind,
+  hit: ThresholdHit,
+  item: {
+    refCollection: AccNotificationRefCollection;
+    refId: string;
+    channel: AccNotificationChannel;
+    name: string;
+    clientName: string | null;
+    costCents: number;
+  }
+): DueAlert {
+  const baseType = accAlertType(itemType, hit.threshold);
+
+  return {
+    // The cycle suffix stays in the display zone so a key written before this
+    // feature keeps matching the one written after it.
+    type: `${baseType}@${toYmdNY(hit.date)}`,
+    baseType,
+    itemType,
+    refCollection: item.refCollection,
+    refId: item.refId,
+    id: item.refId,
+    channel: item.channel,
+    label: item.name,
+    name: item.name,
+    clientName: item.clientName,
+    date: hit.date.toISOString(),
+    daysRemaining: hit.daysLeft,
+    daysLeft: hit.daysLeft,
+    threshold: hit.threshold,
+    amountCents: item.costCents,
+    costCents: item.costCents,
+  };
 }
 
 function nameOf(value: unknown): string | null {

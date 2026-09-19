@@ -98,3 +98,59 @@ export function daysUntil(date: Date, from: Date = new Date()): number {
 export function addDays(days: number, from: Date = new Date()): Date {
   return new Date(from.getTime() + days * 86_400_000);
 }
+
+// ── Zone-aware day countdown ───────────────────────────────────────────────
+
+const zoneYmdFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function ymdFormatterFor(timeZone: string): Intl.DateTimeFormat {
+  const cached = zoneYmdFormatters.get(timeZone);
+  if (cached) return cached;
+
+  let formatter: Intl.DateTimeFormat;
+  try {
+    formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+  } catch {
+    // An unknown zone must not throw on an alert run; fall back to the display
+    // zone, which the settings helper also validates against.
+    formatter = partsFormatter;
+  }
+
+  zoneYmdFormatters.set(timeZone, formatter);
+  return formatter;
+}
+
+function ymdPartsInZone(date: Date, timeZone: string): { y: number; m: number; d: number } {
+  const parts = ymdFormatterFor(timeZone).formatToParts(date);
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((p) => p.type === type)?.value ?? '0');
+  return { y: get('year'), m: get('month'), d: get('day') };
+}
+
+/**
+ * Whole CALENDAR days from `from` until `date`, as the two are dated in
+ * `timeZone`. Negative once `date` is in the past.
+ *
+ * Unlike `daysUntil()`, which divides raw milliseconds, this compares the two
+ * calendar dates themselves — so an alert configured for "7 days before"
+ * matches on the whole of that day no matter what time the daily workflow
+ * runs, which is what exact-threshold matching depends on.
+ */
+export function daysUntilInZone(date: Date, timeZone: string, from: Date = new Date()): number {
+  const a = ymdPartsInZone(from, timeZone);
+  const b = ymdPartsInZone(date, timeZone);
+  return Math.round(
+    (Date.UTC(b.y, b.m - 1, b.d) - Date.UTC(a.y, a.m - 1, a.d)) / 86_400_000
+  );
+}
+
+/** `YYYY-MM-DD` of an instant as seen in `timeZone`. */
+export function toYmdInZone(date: Date, timeZone: string): string {
+  const { y, m, d } = ymdPartsInZone(date, timeZone);
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
